@@ -85,18 +85,14 @@ class Game extends React.Component {
   };
 
   verifyToken = ({ response_code: responseCode, results }) => {
-    try {
-      console.log(responseCode);
-      console.log(results);
-      this.setState((prevState) => ({ ...prevState, allQuestions: results }));
-      this.renderQuestion(results);
-    } catch (error) {
-      if (responseCode) {
-        const { history } = this.props;
-        history.push('/');
-        localStorage.removeItem('token');
-      }
+    if (responseCode) {
+      const { history } = this.props;
+      localStorage.removeItem('token');
+      history.push('/');
+      return;
     }
+    this.setState((prevState) => ({ ...prevState, allQuestions: results }));
+    this.renderQuestion(results);
   };
 
   saveOnRanking = () => {
@@ -109,7 +105,6 @@ class Game extends React.Component {
   };
 
   renderQuestion = (questions) => {
-    const { answerSelected } = this.state;
     const allBtns = questions.reduce((acc, question) => {
       const {
         incorrect_answers: incorrect,
@@ -118,27 +113,17 @@ class Game extends React.Component {
       } = question;
       const allAnswers = [...incorrect, correct]
         .sort(() => Math.random() - ZERO_PONTO_CINCO);
-      const btnsAnswer = allAnswers.map((answer, index) => {
-        const isAnswerSelected = answerSelected;
-        const isCorrectAnswer = correct === answer;
-        let className = '';
-        if (isAnswerSelected) {
-          className = isCorrectAnswer ? 'green' : 'red';
-        }
-        return (
-          <button
-            key={ index }
-            data-testid={
-              correct === answer ? 'correct-answer' : `wrong-answer-${index}`
-            }
-            disabled={ answerSelected }
-            className={ className }
-            onClick={ () => { this.chooseAnswer(difficulty, answer, correct); } }
-          >
-            { answer }
-          </button>
-        );
-      });
+      const btnsAnswer = allAnswers.map((answer, index) => (
+        <button
+          key={ index }
+          data-testid={
+            correct === answer ? 'correct-answer' : `wrong-answer-${index}`
+          }
+          onClick={ () => { this.chooseAnswer(difficulty, answer, correct); } }
+        >
+          { answer }
+        </button>
+      ));
       return [...acc, btnsAnswer];
     }, []);
     this.setState((prevState) => ({ ...prevState, allAnswers: allBtns }));
